@@ -55,8 +55,22 @@ def track_job(job, total, update_interval=3):
                                                (job._number_left * job._chunksize), total), end='', flush=True)
         time.sleep(update_interval)
 
+def pad_input(x, dim=512):
+  npad = ((0, dim - x.shape[0]), (0,0))
+  return np.pad(x, npad)
 
-def seqGenerator(ls, dic, aug=False):
+def pad_adj(a, dim=512):
+  pad_len = dim - a.shape[0]
+  npad = ((0, pad_len), (0, pad_len))
+  return np.pad(a, npad)
+
+def pad_targ(y, dim=512):
+  pad_len = (dim - y.shape[0], dim - y.shape[1])
+  npad = ((0, pad_len[0]), (0, pad_len[1]))
+  t = np.pad(y, npad)
+  return t.reshape(1, -1)
+
+def seqGenerator(ls, dic, aug=False, pad_dim=512):
     indexes = list(range(len(ls)))
 
     while True:
@@ -64,13 +78,13 @@ def seqGenerator(ls, dic, aug=False):
         for i in indexes:
             prot = ls[i]
 
-            a_input = dic[prot]["a_input"]
-            b_input = dic[prot]["b_input"]
+            a_input = pad_input(dic[prot]["a_input"], pad_dim)
+            b_input = pad_input(dic[prot]["b_input"], pad_dim)
 
-            a_graph = dic[prot]["a_adj"]
-            b_graph = dic[prot]["b_adj"]
+            a_graph = pad_adj(dic[prot]["a_adj"], pad_dim)
+            b_graph = pad_adj(dic[prot]["b_adj"], pad_dim)
 
-            target = dic[prot]["target"]
+            target = pad_targ(dic[prot]["target"], pad_dim)
 
             if aug:
                 if (np.random.uniform() < 0.5):  # augment swap
