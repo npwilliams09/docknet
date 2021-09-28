@@ -10,23 +10,24 @@ import os
 
 def getConfig():
     return {
-        "filters": 128,
+        "filters": 64,
         "graph_blocks": 1,
-        "graph_style": 'gcn',
         "drop_rate": 0.8,
-        "combine_style": 'matmul',
+        "combine_style": 'conc',
         "squeeze_excite": False,
         "wave_blocks": 1,
-        "epochs": 50
+        "epochs": 1
     }
 
 
 def main():
-    data_path = Path("/home/jupyter/output")
+    data_path = Path("./docktact-graph/")
     train_file = 'trainList.txt'
     test_file = 'testList.txt'
 
-    config = getConfig()
+    #config = getConfig()
+    run = wandb.init()
+    config = run.config
     g_mode = graph_mode(config["graph_style"])
     print(config)
 
@@ -40,8 +41,7 @@ def main():
 
     model = docknet(config, features)
 
-    wandb.init(project="ppi4-docknet-runs")
-    wandb.config = config
+    #wandb.config = config
 
     loss = get_crossentropy_loss(weight)
     lr_schedule = get_lr_schedule(len(train_ls))
@@ -52,6 +52,12 @@ def main():
 
     model.summary()
 
+    genCheck = seqGenerator(train_ls, train_data, aug=True)
+    examp = next(genCheck)
+    exInp = examp[0]
+    exTarg = examp[1]
+    print(exInp[0].shape,exInp[1].shape,exTarg.shape)
+
     history = model.fit(
         seqGenerator(train_ls, train_data, aug=True),
         steps_per_epoch=len(train_ls),
@@ -59,7 +65,7 @@ def main():
         batch_size=1,
         validation_data=seqGenerator(val_ls, test_data),
         validation_steps=len(val_ls),
-        callbacks=[WandbCallback()],
+        callbacks=[WandbCallback()]
     )
 
     hist_df = pd.DataFrame(history.history)
@@ -72,4 +78,40 @@ def main():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    main()
+    sweep_config = {
+        "name": "Test Sweep",
+        "method": "bayesian",
+        'metric': {
+            'name': 'val_auc',
+            'goal': 'maximize'
+        },
+        "parameters": {
+            "filters": {
+                "value": 32
+            },
+            "graph_blocks": {
+                "value": 1
+            },
+            "drop_rate": {
+                "values" : [0.4,0.6]
+            },
+            "combine_style": {
+                "values" : ['conc', 'matmul']
+            },
+            "squeeze_excite": {
+                "value" : False
+            },
+            "wave_blocks": {
+                "value" : 1
+            },
+            "epochs": {
+                "value" : 1
+            },
+            "graph_style":{
+                "value":"gcn"
+            }
+        }
+    }
+
+    sweep_id = wandb.sweep(sweep_config, project="ppi4-docknet-test")
+    wandb.agent(sweep_id, function=main)

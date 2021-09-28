@@ -4,8 +4,8 @@ from tensorflow_addons.layers import InstanceNormalization
 
 
 class SqueezeExcite(Layer):
-    def __init__(self, input_sz, se_ratio=16):
-        super(SqueezeExcite, self).__init__()
+    def __init__(self, input_sz, se_ratio=16, **kwargs):
+        super(SqueezeExcite, self).__init__(**kwargs)
         self.pool = GlobalAveragePooling2D()
         targShape = (1, 1, input_sz)
         self.reshape = Reshape(targShape)
@@ -21,10 +21,21 @@ class SqueezeExcite(Layer):
         se_tensor = self.excite(se_tensor)
         return self.mult([se_tensor, x])
 
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'pool': self.pool,
+            'reshape': self.reshape,
+            'squeeze': self.squeeze,
+            'excite': self.excite,
+            'mult': self.mult
+        })
+        return config
+
 
 class ConvBlock(Layer):
-    def __init__(self, input_sz, dilation=(1, 1), drop_rate=0.0, squeeze_excite=False):
-        super(ConvBlock, self).__init__()
+    def __init__(self, input_sz=128, dilation=(1, 1), drop_rate=0.0, squeeze_excite=False, **kwargs):
+        super(ConvBlock, self).__init__(**kwargs)
         self.conv1 = Conv2D(filters=input_sz, kernel_size=1, padding='same')
         self.conv2 = Conv2D(filters=input_sz/2, kernel_size=1, padding='same', dilation_rate=dilation)
         self.conv3 = Conv2D(filters=input_sz, kernel_size=1, padding='same')
@@ -47,13 +58,29 @@ class ConvBlock(Layer):
         x = self.norm2(x)
         x = self.activation(x)
 
-        if self.se: #squeeze excite
+        if self.se:  # squeeze excite
             x = self.squeeze_excite(x)
 
         x = self.conv3(x)
         x = self.norm3(x)
         x = self.dropout(x)
         return self.add([x, inputs])
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'conv1': self.conv1,
+            'conv2': self.conv2,
+            'conv3': self.conv3,
+            'norm1': self.norm1,
+            'norm2': self.norm2,
+            'norm3': self.norm3,
+            'activation': self.activation,
+            'dropout': self.dropout,
+            'add': self.add,
+            'se': self.se
+        })
+        return config
 
 
 def wave_block2D(x, filters, drop_rate=0.0, squeeze_excite=False, waves=4):
@@ -64,8 +91,8 @@ def wave_block2D(x, filters, drop_rate=0.0, squeeze_excite=False, waves=4):
 
 
 class OutputLayer(Layer):
-    def __init__(self, drop_rate):
-        super(OutputLayer, self).__init__()
+    def __init__(self, drop_rate=0.2, **kwargs):
+        super(OutputLayer, self).__init__(**kwargs)
         self.drop = Dropout(drop_rate)
         self.conv = Conv2D(filters=1, kernel_size=1, padding="same")
         self.activate = Activation("sigmoid", name="Output", dtype='float32')
@@ -74,3 +101,12 @@ class OutputLayer(Layer):
         x = self.drop(inputs)
         x = self.conv(x)
         return self.activate(x)
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'drop': self.drop,
+            'conv': self.conv,
+            'activate': self.activate
+        })
+        return config

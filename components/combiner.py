@@ -13,6 +13,7 @@ class matmulCombiner(Layer):
 
 class concCombiner(Layer):
     def __init__(self, filters):
+        super(concCombiner, self).__init__()
         self.resizeConv = Conv2D(filters=filters, kernel_size=1, padding='same')
         self.norm = InstanceNormalization()
         self.nonlinear = Activation('swish')

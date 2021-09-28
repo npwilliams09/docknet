@@ -1,12 +1,12 @@
 from tensorflow.keras.layers import Conv1D, Activation, Dropout, Add, Layer, Reshape, Input
 from tensorflow.keras.models import Model
 from tensorflow_addons.layers import InstanceNormalization
-from spektral.layers import GraphConv, GraphSageConv
+from spektral.layers import GCNConv, GraphSageConv
 
 
 class GraphBlock(Layer):
-    def __init__(self, filters, style, drop_rate=0.0):
-        super(GraphBlock, self).__init__()
+    def __init__(self, filters=128, style='gcn', drop_rate=0.0, **kwargs):
+        super(GraphBlock, self).__init__(**kwargs)
         graph_conv = getGraphConv(style)
         self.gconv = graph_conv(filters)
         self.norm = InstanceNormalization()
@@ -35,7 +35,7 @@ class GraphBlock(Layer):
 
 def getGraphConv(style):
     if style == 'gcn':
-        return GraphConv
+        return GCNConv
     elif style == 'sage':
         return GraphSageConv
     return GraphConv  # default option

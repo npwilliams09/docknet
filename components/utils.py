@@ -3,6 +3,7 @@ import tensorflow.keras.backend as K
 import numpy as np
 from spektral.utils.convolution import normalized_adjacency
 
+
 def lr_scheduler(epoch, lr):
     LR = 0.001
     if epoch > 35:
@@ -48,7 +49,7 @@ def get_lr_schedule(steps):
 
 def get_checkpoint_callback(out_path):
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=out_path,
+        filepath=str(out_path),
         save_weights_only=True,
         monitor='val_auc',
         mode='max',

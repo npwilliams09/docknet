@@ -9,7 +9,7 @@ from multiprocessing import set_start_method, get_context
 
 
 def createSet(txtFile, mode="contact", graph_mode='gcn'):
-    prefix = "/home/jupyter/output/"
+    prefix = "./docktact-graph/"
     prots = []
     with open(prefix + txtFile, 'r') as file:  # read in txt file
         for line in file:
@@ -66,8 +66,8 @@ def seqGenerator(ls, dic, aug=False):
             a_input = np.expand_dims(a_input, axis=0)
             b_input = np.expand_dims(b_input, axis=0)
 
-            a_graph = np.expand_dims(a_graph, axis=0)
-            b_graph = np.expand_dims(b_graph, axis=0)
+            #a_graph = np.expand_dims(a_graph, axis=0)
+            #b_graph = np.expand_dims(b_graph, axis=0)
 
             targShape = target.shape
             target = target.reshape((1, targShape[0], targShape[1], 1))

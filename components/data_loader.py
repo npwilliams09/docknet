@@ -4,13 +4,37 @@ from .utils import graph_preprocess
 import random
 import time
 from multiprocessing import set_start_method, get_context
+from pathlib import Path
+
+def process_dataset(path,gmode,custom=None):
+    if custom:
+        with open(custom) as f:
+            paths = [Path(line.rstrip()) for line in f]
+            paths = [str(p).rsplit('/', 1)[-1] for p in paths]
+            paths = [path / p for p in paths]
+    else:
+        paths = [x for x in path.iterdir() if x.is_dir()]
+    zipset = [(str(x).rsplit('/', 1)[-1], x, gmode) for x in paths]
+    names = set([x[0] for x in zipset])
+    dic = dict.fromkeys(names)
+
+    start = time.time()
+    endGoal = len(zipset)
+    for i, pack in enumerate(zipset):
+        result = load_file(pack)
+        dic[result[0]] = result[1]
+        print(f"\r{i}/{endGoal} files loaded",end='',flush=True)
+    end = time.time()
+    delta = end - start
+    print(f"\nTook {'{:.2f}'.format(delta)} seconds to load dataset")
+    return list(dic.keys()), dic
 
 
 def load_file(data):
     x, dir, graph_mode = data
     dic = {}
-    dic["a_input"] = np.nan_to_num(pd.read_pickle(dir / "a_input.pkl").values.astype(np.float32),0.0)
-    dic["b_input"] = np.nan_to_num(pd.read_pickle(dir / "b_input.pkl").values.astype(np.float32),0.0)
+    dic["a_input"] = np.nan_to_num(pd.read_feather(dir / "a_input.ftr").values.astype(np.float32),0.0)
+    dic["b_input"] = np.nan_to_num(pd.read_feather(dir / "b_input.ftr").values.astype(np.float32),0.0)
     dic["a_adj"] = np.nan_to_num(graph_preprocess(np.load(dir / "a_adj.npy"), graph_mode),0.0)
     dic["b_adj"] = np.nan_to_num(graph_preprocess(np.load(dir / "b_adj.npy"), graph_mode),0.0)
     dic["target"] = np.nan_to_num(np.load(dir / "target.npy"),0.0)
@@ -18,20 +42,11 @@ def load_file(data):
 
 
 def fetch_data(data):
-    with get_context("spawn").Pool() as p:
+    with get_context("spawn").Pool(8) as p:
         res = p.map_async(load_file, data)
         track_job(res, len(data))
         print()
         return res.get()
-
-
-def process_dataset(path, graph_mode):
-    files = [x for x in path.iterdir() if x.is_dir()][:10]
-    data = [(x, path / x, graph_mode) for x in files]
-    processed = fetch_data(data)
-    print("Compiling...")
-    dataset = {item[0]: item[1] for item in processed}
-    return files, dataset
 
 
 def track_job(job, total, update_interval=3):
