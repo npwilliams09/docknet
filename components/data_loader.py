@@ -6,7 +6,7 @@ import time
 from multiprocessing import set_start_method, get_context
 from pathlib import Path
 
-def process_dataset(path,gmode,custom=None):
+def process_dataset(path,gmode,custom=None, width_limit=512):
     if custom:
         with open(custom) as f:
             paths = [Path(line.rstrip()) for line in f]
@@ -22,11 +22,14 @@ def process_dataset(path,gmode,custom=None):
     endGoal = len(zipset)
     for i, pack in enumerate(zipset):
         result = load_file(pack)
+        if result[1]["a_input"].shape[0] > width_limit: #skip
+            del dic[result[0]]
+            continue
         dic[result[0]] = result[1]
         print(f"\r{i}/{endGoal} files loaded",end='',flush=True)
     end = time.time()
     delta = end - start
-    print(f"\nTook {'{:.2f}'.format(delta)} seconds to load dataset")
+    print(f"\nTook {'{:.2f}'.format(delta)} seconds to load {len(list(dic.keys()))} files")
     return list(dic.keys()), dic
 
 
@@ -85,7 +88,7 @@ def seqGenerator(ls, dic, aug=False, pad_dim=512):
             b_graph = pad_adj(dic[prot]["b_adj"], pad_dim)
 
             target = pad_targ(dic[prot]["target"], pad_dim)
-
+            '''
             if aug:
                 if (np.random.uniform() < 0.5):  # augment swap
                     a_graph, b_graph = b_graph, a_graph
@@ -101,14 +104,14 @@ def seqGenerator(ls, dic, aug=False, pad_dim=512):
                     b_input = np.flip(b_input, axis=0)
                     b_graph = np.fliplr(np.flipud(b_graph))
                     target = np.flip(target, axis=1)
-
-            assert (a_input.shape[0], b_input.shape[0]) == target.shape, (target.shape, a_input.shape, b_input.shape)
+            '''
+            assert (a_input.shape[0] * b_input.shape[0]) == target.shape[1], (target.shape, a_input.shape, b_input.shape)
 
             a_input = np.expand_dims(a_input, axis=0)
             b_input = np.expand_dims(b_input, axis=0)
 
-            targ_shape = target.shape
-            target = target.reshape((1, targ_shape[0], targ_shape[1], 1))
+            #targ_shape = target.shape
+            #target = target.reshape((1, -1))
 
             yield [a_input, a_graph, b_input, b_graph], target
 

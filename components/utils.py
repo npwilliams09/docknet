@@ -27,12 +27,12 @@ def graph_mode(key):  # to be finished
 
 def get_crossentropy_loss(weight):
     def weighted_crossEntropy(y_true, y_pred):
-        true = tf.cast(K.flatten(y_true), tf.float32)
-        pred = tf.cast(K.flatten(y_pred), tf.float32)
+        #true = tf.cast(K.flatten(y_true), tf.float32)
+        #pred = tf.cast(K.flatten(y_pred), tf.float32)
 
         weights = (true * (weight - 1)) + 1
 
-        bce = K.binary_crossentropy(true, pred)
+        bce = K.binary_crossentropy(y_true, y_pred)
 
         return K.mean(weights * bce)
     return weighted_crossEntropy

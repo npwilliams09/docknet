@@ -41,7 +41,6 @@ def getGraphConv(style):
     return GraphConv  # default option
 
 
-
 def oneDgraph(input_shape, filters, blocks, style, drop_rate=0.0):
     features = Input(shape=(input_shape), name="node_scores")
     adj = Input(shape=(None, None), name="AdjMat")
@@ -53,5 +52,5 @@ def oneDgraph(input_shape, filters, blocks, style, drop_rate=0.0):
     for i in range(blocks - 1):
         x = GraphBlock(filters, style, drop_rate)([x, adj])
 
-    x = Reshape(target_shape=(-1, filters, 1), name="1D_to_2D")(x)
+    #x = Reshape(target_shape=(-1, filters, 1), name="1D_to_2D")(x)
     return Model([features, adj], x, name="graphLayer")
