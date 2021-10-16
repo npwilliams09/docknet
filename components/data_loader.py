@@ -22,7 +22,7 @@ def process_dataset(path,gmode,custom=None, width_limit=512):
     endGoal = len(zipset)
     for i, pack in enumerate(zipset):
         result = load_file(pack)
-        if result[1]["a_input"].shape[0] > width_limit: #skip
+        if result[1]["a_input"].shape[0] > width_limit or result[1]["b_input"].shape[0] > width_limit: #skip
             del dic[result[0]]
             continue
         dic[result[0]] = result[1]
@@ -112,6 +112,7 @@ def seqGenerator(ls, dic, aug=False, pad_dim=512):
 
             #targ_shape = target.shape
             #target = target.reshape((1, -1))
+            target = target.astype(np.float32)
 
             yield [a_input, a_graph, b_input, b_graph], target
 

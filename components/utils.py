@@ -30,9 +30,9 @@ def get_crossentropy_loss(weight):
         #true = tf.cast(K.flatten(y_true), tf.float32)
         #pred = tf.cast(K.flatten(y_pred), tf.float32)
 
-        weights = (true * (weight - 1)) + 1
+        weights = (y_true * (weight - 1)) + 1
 
-        bce = K.binary_crossentropy(y_true, y_pred)
+        bce = tf.keras.losses.BinaryCrossentropy()(y_true, y_pred)
 
         return K.mean(weights * bce)
     return weighted_crossEntropy

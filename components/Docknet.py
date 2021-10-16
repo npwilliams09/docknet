@@ -48,16 +48,21 @@ def dockcoder(config, features):
 
     combined = tf.keras.layers.concatenate([procA, procB], axis=1)
 
-    combined = EncoderLayer(config["width"], num_heads=config["attn_heads"], dff=config["dff_sz"])(combined)
+    combined = EncoderLayer(config["filters"], num_heads=config["attn_heads"], dff=config["dff_sz"])(combined)
 
     for i in range(config["wave_blocks"] - 1):
         combined = EncoderLayer(config["width"], num_heads=config["attn_heads"], dff=config["dff_sz"])(combined)
     
     combined = tf.keras.layers.Dense(width * width, activation="relu")(combined)
     combined = tf.transpose(combined, perm=[0,2,1])
-    #combined = tf.keras.layers.Conv1D(filters=1, kernel_size=1)(combined)
-    #combined = tf.keras.layers.Flatten()(combined)
-    #combined = Activation('sigmoid')(combined)
+    combined = tf.keras.layers.Conv1D(filters=1, kernel_size=1, activation="sigmoid")(combined)
+    combined = tf.keras.layers.Flatten()(combined)
+    '''
+    output = tf.zeros((1, width), dtype=tf.float32)
+    for i in range(width):
+        for j in range(width):
+            a = combined[1]
+    '''
 
     return Model([nodesA, adjA, nodesB, adjB], combined)
 

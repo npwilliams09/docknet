@@ -3,3 +3,7 @@
 *.pyc
 .idea/
 *.h5
+*.json
+*.log
+*.yaml
+*.wandb

@@ -21,8 +21,8 @@ def getConfig():
         "squeeze_excite": False,
         "wave_blocks": 1,
         "epochs": 14,
-        "lr": 0.00006,
-        "width": 128,
+        "lr": 4e-3,
+        "width": 256,
         "attn_heads" : 2,
         "dff_sz" : 128
     }
@@ -82,12 +82,14 @@ def main():
     
     mini_epoch = 2
 
+    print(len(train_ls))
+
     history = model.fit(
-        seqGenerator(train_ls, train_data, aug=True),
+        seqGenerator(train_ls, train_data, aug=True, pad_dim=config["width"]),
         steps_per_epoch=len(train_ls)/mini_epoch,
         epochs=config["epochs"]*mini_epoch,
         batch_size=1,
-        validation_data=seqGenerator(val_ls, test_data),
+        validation_data=seqGenerator(val_ls, test_data, pad_dim=config["width"]),
         validation_steps=len(val_ls),
         #callbacks=[WandbCallback()],
         #use_multiprocessing=True,
