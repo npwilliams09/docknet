@@ -1,5 +1,5 @@
 # Docknet
-RMIT Capstone 2020 DockNet Training Code
+RMIT Capstone DockNet Training Code
 
 Author: Nathan Williams
 
