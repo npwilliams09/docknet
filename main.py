@@ -44,7 +44,7 @@ def main():
     tf.config.optimizer.set_jit(True)
 
     os.environ["WANDB_MODE"] ="dryrun"
-    os.environ["WANDB_API_KEY"] = "131c9435a433970b7ab833e257936757f2390599" #remove later
+    os.environ["WANDB_API_KEY"] = ""
     wandb_path = data_path / "wandb"
     wandb_path.mkdir(exist_ok=True, parents=False)
     os.environ["WANDB_DIR"] = str(wandb_path)
